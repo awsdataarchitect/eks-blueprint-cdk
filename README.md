@@ -1,4 +1,4 @@
-# Open-source code for Deploying Super Mario Bros. game on an EKS Cluster using EKS Blueprints for AWS CDK
+# Open-source code for using AWS-CDK to provision an EKS Cluster using EKS Blueprints with Kubernetes version 1.30 (Application running a Super Mario Bros. game)
 
 This is a CDK project written in TypeScript that provisions an EKS Cluster using EKS Blueprints with Kubernetes V1.30 and the required Kubernetes EKS add-ons (Amazon VPC CNI and AWS Load Balancer Controller) along with the Kubernetes manifests (Deployment, Service, Ingress) to launch the Dockerized version of the popular Super Mario Bros. game.
 
