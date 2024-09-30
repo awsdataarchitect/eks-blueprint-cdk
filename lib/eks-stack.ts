@@ -4,14 +4,13 @@ import * as eks from 'aws-cdk-lib/aws-eks';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as blueprints from '@aws-quickstart/eks-blueprints';
-import { marioManifests } from './mario-manifests';
-
+import { EksManifests } from './eks-manifests';
 
 interface ClusterProps extends cdk.StackProps {
   eksvpc: ec2.IVpc,
 }
 
-export class MarioStack extends cdk.Stack {
+export class EksStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: ClusterProps) {
     super(scope, id, props);
@@ -19,34 +18,44 @@ export class MarioStack extends cdk.Stack {
     const mastersRoleArn = process.env.MASTERS_ROLE_ARN || 'arn:aws:iam::1234567890:role/mastersRoleArn';
     const userRoleArn = process.env.USER_ROLE_ARN || 'arn:aws:iam::1234567890:role/userRoleArn';
 
-    const workerSpotInstanceType = 't4g.medium'
+    const workerSpotInstanceType = 't3.medium'
 
     const addOns: Array<blueprints.ClusterAddOn> = [
       new blueprints.addons.AwsLoadBalancerControllerAddOn(),
       new blueprints.addons.VpcCniAddOn(),
-      new marioManifests
+     // new EksManifests(this, 'eksManifests')
     ];
 
+    // Create Launch Template
+    const launchTemplate = new ec2.LaunchTemplate(this, 'LaunchTemplate', {
+      keyName: 'waltsoft-inc',  // Replace with your key pair name
+      //instanceType: new ec2.InstanceType(workerSpotInstanceType),  // Replace with your instance type
+    });
+
     const clusterProvider = new blueprints.GenericClusterProvider({
-      version: eks.KubernetesVersion.of('1.30'),
+      version: eks.KubernetesVersion.of('1.31'),
       tags: {
-        'Name': 'mario-cluster',
+        'Name': 'eks-cluster',
       },
       mastersRole: blueprints.getResource(context => {
         return iam.Role.fromRoleArn(context.scope, 'MastersRole', mastersRoleArn, {
           mutable: true, // Set to true if you need to update the role
         })
-
       }),
       managedNodeGroups: [{
         id: 'mng1-launchtemplate',
         instanceTypes: [new ec2.InstanceType(workerSpotInstanceType)],
-        amiType: eks.NodegroupAmiType.AL2_ARM_64,
+        amiType: eks.NodegroupAmiType.AL2_X86_64,
         nodeGroupCapacityType: eks.CapacityType.SPOT,
         desiredSize: 1,
         minSize: 0,
         maxSize: 1,
         nodeGroupSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+        launchTemplateSpec:
+        {
+          id: launchTemplate.launchTemplateId || 'id',
+          version: launchTemplate.latestVersionNumber,
+        }
       }
       ],
       privateCluster: false,
@@ -75,6 +84,6 @@ export class MarioStack extends cdk.Stack {
       .teams(platformTeam)
       .resourceProvider(blueprints.GlobalResources.Vpc,
         new blueprints.DirectVpcProvider(props.eksvpc))
-      .build(this, 'mario-cluster')
+      .build(this, 'eks-cluster')
   }
 }
