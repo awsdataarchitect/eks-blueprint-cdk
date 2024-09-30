@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y git
 # Clone the GitHub repository (PrinceJS in this case)
 RUN git clone https://github.com/bdllerena/PrinceJS.git .
 
-
 # Install dependencies
 RUN npm install
 

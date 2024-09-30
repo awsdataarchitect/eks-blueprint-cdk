@@ -23,12 +23,12 @@ export class EksStack extends cdk.Stack {
     const addOns: Array<blueprints.ClusterAddOn> = [
       new blueprints.addons.AwsLoadBalancerControllerAddOn(),
       new blueprints.addons.VpcCniAddOn(),
-     // new EksManifests(this, 'eksManifests')
+      new EksManifests(this, 'eksManifests')
     ];
 
     // Create Launch Template
     const launchTemplate = new ec2.LaunchTemplate(this, 'LaunchTemplate', {
-      keyName: 'waltsoft-inc',  // Replace with your key pair name
+      keyName: process.env.KEY_PAIR_NAME,  // Replace with your key pair name
       //instanceType: new ec2.InstanceType(workerSpotInstanceType),  // Replace with your instance type
     });
 
@@ -85,5 +85,6 @@ export class EksStack extends cdk.Stack {
       .resourceProvider(blueprints.GlobalResources.Vpc,
         new blueprints.DirectVpcProvider(props.eksvpc))
       .build(this, 'eks-cluster')
+
   }
 }
